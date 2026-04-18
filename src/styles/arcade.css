@@ -1,0 +1,562 @@
+/* ==========================================
+   CABINET
+   ========================================== */
+
+.cabinet-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.cabinet-ambient {
+  position: absolute;
+  inset: -60px;
+  pointer-events: none;
+  z-index: 0;
+  transition: background 0.5s ease;
+}
+
+.cabinet-body {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, #110020 0%, #0a0015 40%, #0d0018 100%);
+  border: 2px solid #2a0050;
+  border-radius: 12px 12px 4px 4px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 40px #00000088,
+    0 0 2px #ffffff11,
+    0 20px 60px #00000099;
+}
+
+/* Marquee */
+.cabinet-marquee {
+  padding: 12px 20px;
+  border-bottom: 1px solid;
+  text-align: center;
+  background: linear-gradient(90deg, transparent, #ffffff05, transparent);
+  transition: box-shadow 0.5s ease;
+}
+
+.marquee-title {
+  font-size: 14px;
+  letter-spacing: 2px;
+  transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+
+.marquee-subtitle {
+  font-size: 7px;
+  margin-top: 6px;
+  letter-spacing: 1px;
+  transition: color 0.5s ease;
+}
+
+/* Cabinet main */
+.cabinet-main {
+  display: flex;
+  align-items: stretch;
+}
+
+.side-panel {
+  width: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.5s ease;
+}
+
+.side-stripe {
+  width: 2px;
+  height: 60%;
+  border-radius: 2px;
+  opacity: 0.5;
+  transition: background 0.5s ease;
+}
+
+.cabinet-center {
+  flex: 1;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Cabinet base */
+.cabinet-base {
+  padding: 10px 20px;
+  border-top: 1px solid;
+  background: #08000e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.5s ease;
+}
+
+.base-lights {
+  display: flex;
+  gap: 10px;
+}
+
+.base-light {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: baseLightPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes baseLightPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.base-text {
+  font-size: 7px;
+  letter-spacing: 1px;
+}
+
+
+/* ==========================================
+   SCREEN
+   ========================================== */
+
+.screen-outer {
+  width: 100%;
+}
+
+.screen-bezel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #000;
+  border: 3px solid #1a0030;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 20px #000000cc,
+    0 0 4px #ffffff08;
+}
+
+/* Scanlines */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* CRT reflection */
+.crt-reflection {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 11;
+  border-radius: 6px 6px 0 0;
+}
+
+/* Power LED */
+.power-led {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  z-index: 12;
+  transition: background 0.5s, box-shadow 0.5s;
+}
+
+/* Screen content */
+.screen-content {
+  position: absolute;
+  inset: 0;
+  background: #020802;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 5;
+  /* Subtle vignette */
+  background: radial-gradient(ellipse at center, #051005 60%, #000 100%);
+}
+
+.screen-idle {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.screen-awakening {
+  text-align: center;
+  font-size: 10px;
+  line-height: 2;
+}
+
+.awakening-text span {
+  display: inline-block;
+  animation: fadeIn 0.1s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+.screen-message {
+  width: 100%;
+  text-align: center;
+}
+
+.oracle-text {
+  font-size: 11px;
+  line-height: 2.2;
+  transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+
+.oracle-line {
+  min-height: 1.2em;
+}
+
+.oracle-cursor {
+  font-size: 12px;
+}
+
+
+/* ==========================================
+   SPRITE AREA
+   ========================================== */
+
+.sprite-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 120px;
+  padding: 8px;
+}
+
+.oracle-sprite {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oracle-eye-outer {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a000f;
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+
+.oracle-eye-inner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background 0.4s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eye-open {
+  animation: eyeFlash 0.3s ease;
+}
+
+@keyframes eyeFlash {
+  0% { transform: scaleY(0); }
+  60% { transform: scaleY(1.1); }
+  100% { transform: scaleY(1); }
+}
+
+.oracle-pupil {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #000;
+  box-shadow: 0 0 4px #000;
+  animation: pupilMove 3s ease-in-out infinite;
+}
+
+@keyframes pupilMove {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(3px, -2px); }
+  50% { transform: translate(-2px, 3px); }
+  75% { transform: translate(2px, 2px); }
+}
+
+/* Energy rings */
+.energy-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  opacity: 0;
+  animation: expandRing 1.5s ease-out infinite;
+}
+
+.ring-1 { width: 70px; height: 70px; animation-delay: 0s; }
+.ring-2 { width: 90px; height: 90px; animation-delay: 0.5s; }
+.ring-3 { width: 110px; height: 110px; animation-delay: 1s; }
+
+@keyframes expandRing {
+  0% { transform: scale(0.6); opacity: 0.6; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* Particles */
+.particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: orbit 2s linear infinite;
+}
+
+.particle-1 { top: 5px; left: 50%; animation-duration: 1.8s; }
+.particle-2 { top: 25%; right: 5px; animation-duration: 2.1s; animation-delay: 0.3s; }
+.particle-3 { bottom: 5px; right: 30%; animation-duration: 1.6s; animation-delay: 0.6s; }
+.particle-4 { bottom: 20%; left: 5px; animation-duration: 2.3s; animation-delay: 0.9s; }
+.particle-5 { top: 40%; left: 5px; animation-duration: 1.9s; animation-delay: 1.2s; }
+.particle-6 { top: 10%; right: 20%; animation-duration: 2s; animation-delay: 1.5s; }
+
+@keyframes orbit {
+  0% { opacity: 0; transform: scale(0); }
+  20% { opacity: 1; transform: scale(1); }
+  80% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0) translateY(-20px); }
+}
+
+.sprite-idle-glow {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  transition: background 0.5s;
+  opacity: 0.4;
+}
+
+.sprite-label {
+  font-size: 7px;
+  letter-spacing: 1px;
+  transition: color 0.4s, text-shadow 0.4s;
+  text-align: center;
+}
+
+
+/* ==========================================
+   CATEGORY SELECT
+   ========================================== */
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.arcade-btn {
+  padding: 8px 4px;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #0a0015;
+  color: #555;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.arcade-btn:hover:not(:disabled) {
+  border-color: #666 !important;
+  color: #999 !important;
+  background: #15002a !important;
+}
+
+.arcade-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.arcade-btn.selected {
+  transition: all 0.3s ease;
+}
+
+.controls-label {
+  font-size: 8px;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+
+/* ==========================================
+   CONTROLS ROW
+   ========================================== */
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.controls-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Ask button */
+.ask-btn {
+  width: 100%;
+  padding: 12px 8px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  border: 2px solid #222;
+  border-radius: 4px;
+  color: #333;
+  background: #080010;
+  transition: all 0.3s ease;
+  margin-top: 4px;
+}
+
+.ask-btn-active {
+  animation: askGlow 2s ease-in-out infinite;
+}
+
+.ask-btn-active:hover {
+  transform: scale(1.02);
+}
+
+.ask-btn-active:active {
+  transform: scale(0.98);
+}
+
+@keyframes askGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+
+.ask-btn-disabled {
+  opacity: 0.5;
+}
+
+
+/* ==========================================
+   COIN TRAY
+   ========================================== */
+
+.coin-tray {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #07000e;
+  border: 1px solid #1a0030;
+  border-radius: 4px;
+}
+
+.coin-btn {
+  font-size: 8px;
+  padding: 6px 10px;
+  border: 1px solid;
+  border-radius: 3px;
+  background: #0a0008;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.coin-btn:hover {
+  background: #1a000f;
+  filter: brightness(1.3);
+}
+
+.coin-btn:active {
+  transform: scale(0.95);
+}
+
+.coin-display {
+  font-size: 12px;
+  letter-spacing: 4px;
+  display: flex;
+  gap: 2px;
+}
+
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 480px) {
+  .cabinet-wrapper {
+    max-width: 100%;
+  }
+
+  .marquee-title {
+    font-size: 10px;
+  }
+
+  .marquee-subtitle {
+    font-size: 6px;
+  }
+
+  .controls-row {
+    flex-direction: column;
+  }
+
+  .sprite-container {
+    width: 100%;
+    flex-direction: row;
+    gap: 16px;
+    padding: 4px 16px;
+  }
+
+  .oracle-sprite {
+    width: 60px;
+    height: 60px;
+  }
+
+  .oracle-eye-outer {
+    width: 48px;
+    height: 48px;
+  }
+
+  .oracle-eye-inner {
+    width: 28px;
+    height: 28px;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .oracle-text {
+    font-size: 9px;
+  }
+}

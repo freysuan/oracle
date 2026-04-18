@@ -1,0 +1,15 @@
+:root {
+  --bg: #08050f;
+  --cabinet-bg: #100520;
+  --cabinet-border: #2a0050;
+  --screen-bg: #030a03;
+  --neon-green: #00ff88;
+  --neon-cyan: #00ffff;
+  --neon-magenta: #ff00ff;
+  --neon-yellow: #ffcc00;
+  --neon-red: #ff2266;
+  --neon-purple: #cc66ff;
+  --neon-orange: #ff6600;
+  --text-dim: #444;
+  --text-muted: #222;
+}
