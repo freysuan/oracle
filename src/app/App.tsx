@@ -435,17 +435,17 @@ export default function App() {
             title={muted ? "Unmute" : "Mute"}
             className="font-title"
             style={{
-              width:44, height:44,
+              width:36, height:36,
               display:"flex", alignItems:"center", justifyContent:"center",
-              fontSize:16,
-              color: muted ? "var(--text-primary-dim)" : "var(--coin-color)",
-              background:"rgba(10,0,21,0.6)",
-              border:`2px solid ${muted ? "var(--border)" : "var(--coin-color)"}`,
+              fontSize:14,
+              color:"var(--text-primary-dim)",
+              opacity: muted ? 0.5 : 0.8,
+              background:"transparent",
+              border:`1px solid var(--border)`,
               borderRadius:6,
               cursor:"pointer",
               letterSpacing:0,
-              boxShadow: muted ? "none" : "0 0 10px rgba(255,215,0,0.25)",
-              transition:"all 0.15s ease",
+              transition:"opacity 0.15s ease",
             }}
           >
             {muted ? "🔇" : "🔊"}
