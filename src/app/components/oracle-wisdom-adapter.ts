@@ -1,23 +1,15 @@
-import { getWisdom, categories } from '../../imports/oracle-wisdom.js'
+// @ts-ignore
+import _wisdom from "../../imports/oracle-wisdom.js";
 
-export type Category = {
-  id: string
-  label: string
-  color: string
-  glow: string
-}
+export interface WisdomEntry { r: string; p: string; }
+export type WisdomCategory = "love" | "quests" | "boss" | "destiny";
+export const wisdom = _wisdom as Record<WisdomCategory, WisdomEntry[]>;
 
-export type OracleState = 'idle' | 'awakening' | 'speaking' | 'cooldown'
-
-export function fetchWisdom(categoryId: string): string {
-  return getWisdom(categoryId)
-}
-
-export function getCategories(): Category[] {
-  return categories as Category[]
-}
-
-export function getRandomCategory(): Category {
-  const cats = getCategories()
-  return cats[Math.floor(Math.random() * cats.length)]
+export function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }

@@ -1,120 +1,422 @@
-import { useState, useCallback } from 'react'
-import Cabinet from './components/Cabinet'
-import Screen from './components/Screen'
-import SpriteArea from './components/SpriteArea'
-import CategorySelect from './components/CategorySelect'
-import { fetchWisdom, getCategories, OracleState } from './components/oracle-wisdom-adapter'
+import { useState, useRef, useCallback, useEffect } from "react";
+import Cabinet from "./components/Cabinet";
+import { SpriteArea, SpriteState } from "./components/SpriteArea";
+import CategorySelect from "./components/CategorySelect";
+import { wisdom, WisdomCategory, WisdomEntry, shuffle } from "./components/oracle-wisdom-adapter";
 
-const DEFAULT_COLOR = '#00ff88'
+type AppState = "idle" | "coinDrop" | "categories" | "responding" | "done";
 
-export default function App() {
-  const categories = getCategories()
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [oracleState, setOracleState] = useState<OracleState>('idle')
-  const [message, setMessage] = useState('')
-  const [coins, setCoins] = useState(3)
+// 60 background stars with deterministic positions
+const BG_STARS = Array.from({ length: 60 }, (_, i) => ({
+  id: i,
+  x: (i * 137.508) % 100,
+  y: (i * 97.34)   % 100,
+  delay: (i * 0.3) % 5,
+}));
 
-  const selectedCat = categories.find((c) => c.id === selectedCategory)
-  const accentColor = selectedCat?.color ?? DEFAULT_COLOR
+// ── Inline Screen ──────────────────────────────────────────────────────────────
+type ScreenProps = {
+  appState: AppState;
+  displayedBody: string;
+  displayedProphecy: string;
+  bodyDone: boolean;
+  prophecyDone: boolean;
+  showWarmUp: boolean;
+  onSelectCategory: (id: string) => void;
+  onSkip: () => void;
+};
 
-  const handleAsk = useCallback(() => {
-    if (!selectedCategory || oracleState !== 'idle' || coins <= 0) return
-
-    setCoins((c) => c - 1)
-    setOracleState('awakening')
-
-    const wisdom = fetchWisdom(selectedCategory)
-
-    setTimeout(() => {
-      setMessage(wisdom)
-      setOracleState('speaking')
-    }, 2200)
-
-    const msgLength = wisdom.replace(/\n/g, '').length
-    const speakDuration = 2200 + msgLength * 45 + 800
-
-    setTimeout(() => {
-      setOracleState('cooldown')
-    }, speakDuration)
-
-    setTimeout(() => {
-      setOracleState('idle')
-    }, speakDuration + 2500)
-  }, [selectedCategory, oracleState, coins])
-
-  const handleInsertCoin = () => {
-    setCoins((c) => Math.min(c + 1, 9))
-  }
-
-  const isAsking = oracleState !== 'idle'
-  const canAsk = selectedCategory !== null && !isAsking && coins > 0
+function Screen({
+  appState, displayedBody, displayedProphecy,
+  bodyDone, prophecyDone, showWarmUp,
+  onSelectCategory, onSkip,
+}: ScreenProps) {
+  const spriteState: SpriteState =
+    appState === "categories" ? "input"
+    : appState === "responding" ? "responding"
+    : "idle";
 
   return (
-    <div className="app-root">
-      {/* Stars background */}
-      <div className="stars-bg" />
+    <div style={{
+      position:"relative",
+      margin:"0 12px",
+      background:"var(--bg-screen)",
+      border:`1px solid var(--border)`,
+      borderRadius:6,
+      overflow:"hidden",
+      animation:"crtFlicker 6s ease-in-out infinite",
+      minHeight:340,
+    }}>
+      {/* CRT overlays */}
+      <div className="scanlines"/>
+      <div className="moving-scan"/>
+      <div className="crt-vignette"/>
 
-      <Cabinet accentColor={accentColor}>
-        {/* Screen area */}
-        <Screen
-          message={message}
-          state={oracleState}
-          categoryColor={accentColor}
-          categoryLabel={selectedCat?.label ?? null}
-        />
+      {/* Screen warm-up flash */}
+      {showWarmUp && (
+        <div style={{
+          position:"absolute", inset:0, zIndex:20,
+          animation:"screenWarmUp 0.95s ease forwards",
+          pointerEvents:"none",
+        }}/>
+      )}
 
-        {/* Sprite + controls row */}
-        <div className="controls-row">
-          {/* Oracle sprite */}
-          <SpriteArea state={oracleState} categoryColor={accentColor} />
+      {/* Content */}
+      <div style={{
+        position:"relative", zIndex:5,
+        display:"flex", flexDirection:"column",
+        alignItems:"center",
+        padding:"18px 16px 14px",
+        gap:10,
+      }}>
+        {/* Crystal ball */}
+        <SpriteArea state={spriteState} compact={appState === "responding" || appState === "done"}/>
 
-          {/* Category selector + ask button */}
-          <div className="controls-right">
-            <div className="font-pixel controls-label" style={{ color: `${accentColor}88` }}>
-              SELECT CATEGORY
+        {/* State-specific content */}
+        {appState === "idle" && (
+          <div style={{ textAlign:"center", animation:"slideUp 0.4s ease" }}>
+            <div className="font-title" style={{
+              fontSize:8, color:"var(--accent)",
+              animation:"accentGlow 2.5s ease-in-out infinite",
+              marginBottom:14, letterSpacing:2,
+            }}>
+              ✦ THE ORACLE AWAITS ✦
             </div>
-            <CategorySelect
-              categories={categories}
-              selected={selectedCategory}
-              onSelect={setSelectedCategory}
-              disabled={isAsking}
-            />
-
-            {/* Ask button */}
-            <button
-              onClick={handleAsk}
-              disabled={!canAsk}
-              className={`ask-btn font-pixel ${canAsk ? 'ask-btn-active' : 'ask-btn-disabled'}`}
-              style={canAsk ? {
-                borderColor: accentColor,
-                color: accentColor,
-                boxShadow: `0 0 20px ${accentColor}88, inset 0 0 20px ${accentColor}22`,
-                background: `${accentColor}11`,
-              } : {}}
-            >
-              {oracleState === 'awakening' && '◈ CHANNELING...'}
-              {oracleState === 'speaking' && '◈ SPEAKING...'}
-              {oracleState === 'cooldown' && '◈ RECOVERING...'}
-              {oracleState === 'idle' && (coins === 0 ? 'NO COINS' : '▶ ASK THE ORACLE')}
-            </button>
+            <div className="font-title" style={{
+              fontSize:10, letterSpacing:2,
+              animation:"blink 1s step-start infinite, coinGlow 2s ease-in-out infinite",
+              marginBottom:14,
+            }}>
+              ► INSERT COIN ◄
+            </div>
+            <div className="font-vt" style={{
+              fontSize:16, color:"var(--accent)",
+              letterSpacing:2, marginBottom:2,
+            }}>
+              LOVE · QUESTS
+            </div>
+            <div className="font-vt" style={{
+              fontSize:16, color:"var(--accent)",
+              letterSpacing:2,
+            }}>
+              BOSS FIGHTS · DESTINY
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Coin tray */}
-        <div className="coin-tray">
-          <button onClick={handleInsertCoin} className="coin-btn font-pixel" style={{ color: '#ffcc00', borderColor: '#ffcc0066' }}>
-            + INSERT COIN
-          </button>
-          <div className="coin-display font-pixel" style={{ color: '#ffcc00' }}>
-            {Array.from({ length: 9 }).map((_, i) => (
-              <span key={i} style={{ opacity: i < coins ? 1 : 0.15 }}>●</span>
-            ))}
+        {appState === "coinDrop" && (
+          <div className="font-title" style={{
+            fontSize:8, color:"var(--coin-color)",
+            animation:"blink 0.4s step-start infinite",
+          }}>
+            COIN INSERTED...
           </div>
-        </div>
-      </Cabinet>
+        )}
 
-      {/* Version tag */}
-      <div className="version-tag font-pixel">v1.0 — ORACLE MACHINE</div>
+        {appState === "categories" && (
+          <div style={{ animation:"slideUp 0.35s ease", width:"100%" }}>
+            <CategorySelect onSelect={onSelectCategory}/>
+          </div>
+        )}
+
+        {(appState === "responding" || appState === "done") && (
+          <div style={{ width:"100%", animation:"slideUp 0.4s ease" }}>
+            <div className="font-title" style={{
+              fontSize:6, color:"var(--accent)",
+              textAlign:"center", marginBottom:10,
+              animation:"accentGlow 2.5s ease-in-out infinite",
+            }}>
+              — THE ORACLE SPEAKS —
+            </div>
+
+            {/* Body text box */}
+            <div style={{
+              background:"rgba(0,0,0,0.45)",
+              border:`1px solid var(--border)`,
+              borderRadius:4, padding:"10px 12px",
+              marginBottom:8, minHeight:60,
+            }}>
+              <span className="font-vt" style={{ fontSize:18, color:"var(--text-primary)", lineHeight:1.4 }}>
+                {displayedBody}
+              </span>
+              {!bodyDone && (
+                <span className="font-vt" style={{
+                  fontSize:18, color:"var(--accent)",
+                  animation:"blink 0.5s step-start infinite",
+                }}>▋</span>
+              )}
+            </div>
+
+            {/* Prophecy */}
+            {(displayedProphecy || bodyDone) && (
+              <div style={{
+                textAlign:"center", padding:"6px 8px",
+                animation:"prophecyReveal 0.5s ease",
+              }}>
+                <span className="font-vt" style={{
+                  fontSize:20,
+                  animation:"prophecyGlow 2s ease-in-out infinite",
+                }}>
+                  {displayedProphecy}
+                </span>
+                {bodyDone && !prophecyDone && (
+                  <span className="font-vt" style={{
+                    fontSize:20, color:"var(--text-prophecy)",
+                    animation:"blink 0.5s step-start infinite",
+                  }}>▋</span>
+                )}
+              </div>
+            )}
+
+            {/* Skip / done button */}
+            {appState === "done" ? (
+              <button onClick={onSkip} className="font-title" style={{
+                display:"block", width:"100%", marginTop:10,
+                padding:"8px", fontSize:7, letterSpacing:2,
+                color:"var(--accent)", border:`1px solid var(--accent)`,
+                borderRadius:4, background:"transparent",
+                animation:"accentGlow 2s ease-in-out infinite",
+                cursor:"pointer",
+              }}>
+                ✦ CONSULT AGAIN ✦
+              </button>
+            ) : (
+              <button onClick={onSkip} className="font-vt" style={{
+                display:"block", width:"100%", marginTop:6,
+                padding:"4px", fontSize:14,
+                color:"var(--text-primary-dim)", border:"none",
+                background:"transparent", cursor:"pointer",
+              }}>
+                [skip]
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
+}
+
+// ── ControlsBar ────────────────────────────────────────────────────────────────
+function ControlsBar({ appState, onInsertCoin }: { appState: AppState; onInsertCoin: () => void }) {
+  return (
+    <div style={{
+      textAlign:"center", padding:"12px 12px 0",
+    }}>
+      {appState === "idle" && (
+        <button onClick={onInsertCoin} className="font-title" style={{
+          fontSize:10, color:"var(--coin-color)",
+          animation:"coinGlow 1.8s ease-in-out infinite",
+          border:`2px solid var(--coin-color)`,
+          borderRadius:4,
+          background:"rgba(0,0,0,0.3)",
+          cursor:"pointer",
+          padding:"12px 16px",
+          width:"100%",
+          letterSpacing:3,
+          boxShadow:"0 0 12px rgba(255,215,0,0.25), inset 0 0 8px rgba(255,215,0,0.12)",
+        }}>
+          ◆ INSERT COIN ◆
+        </button>
+      )}
+      {appState === "coinDrop" && (
+        <div className="font-title" style={{
+          fontSize:7, color:"var(--accent)",
+          animation:"accentGlow 2s ease-in-out infinite",
+          padding:"12px 0",
+        }}>
+          READING THE MISTS...
+        </div>
+      )}
+      {appState === "categories" && (
+        <div className="font-title" style={{
+          fontSize:7, color:"var(--text-primary-dim)",
+          letterSpacing:2, padding:"12px 0",
+        }}>
+          TAP A CATEGORY TO CONSULT
+        </div>
+      )}
+      {appState === "responding" && (
+        <div className="font-title" style={{
+          fontSize:7, color:"var(--accent)",
+          animation:"accentGlow 2s ease-in-out infinite",
+          padding:"12px 0",
+        }}>
+          READING THE MISTS...
+        </div>
+      )}
+      {appState === "done" && (
+        <div className="font-title" style={{
+          fontSize:7, color:"var(--text-primary-dim)",
+          letterSpacing:2, padding:"12px 0",
+        }}>
+          ✦ CONSULT AGAIN ✦
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── App ────────────────────────────────────────────────────────────────────────
+export default function App() {
+  const [appState,          setAppState]          = useState<AppState>("idle");
+  const [displayedBody,     setDisplayedBody]     = useState("");
+  const [displayedProphecy, setDisplayedProphecy] = useState("");
+  const [bodyDone,          setBodyDone]          = useState(false);
+  const [prophecyDone,      setProphecyDone]      = useState(false);
+  const [showWarmUp,        setShowWarmUp]        = useState(false);
+  const [coinDrop,          setCoinDrop]          = useState(false);
+  const [coinSlotFlashing,  setCoinSlotFlashing]  = useState(false);
+
+  // Per-category shuffled decks
+  const decks = useRef<Record<WisdomCategory, WisdomEntry[]>>({
+    love: [], quests: [], boss: [], destiny: [],
+  });
+
+  function pickFromDeck(cat: WisdomCategory): WisdomEntry {
+    if (decks.current[cat].length === 0) {
+      decks.current[cat] = shuffle([...(wisdom[cat] ?? [])]);
+    }
+    return decks.current[cat].pop()!;
+  }
+
+  const typeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const runTypewriter = useCallback((entry: WisdomEntry) => {
+    let bi = 0;
+    let pi = 0;
+    setDisplayedBody("");
+    setDisplayedProphecy("");
+    setBodyDone(false);
+    setProphecyDone(false);
+
+    const typeBody = () => {
+      if (bi < entry.r.length) {
+        bi++;
+        setDisplayedBody(entry.r.slice(0, bi));
+        typeTimer.current = setTimeout(typeBody, 22);
+      } else {
+        setBodyDone(true);
+        typeTimer.current = setTimeout(typeProphecy, 800);
+      }
+    };
+
+    const typeProphecy = () => {
+      if (pi < entry.p.length) {
+        pi++;
+        setDisplayedProphecy(entry.p.slice(0, pi));
+        typeTimer.current = setTimeout(typeProphecy, 40);
+      } else {
+        setProphecyDone(true);
+        setAppState("done");
+      }
+    };
+
+    typeTimer.current = setTimeout(typeBody, 22);
+  }, []);
+
+  const handleInsertCoin = useCallback(() => {
+    if (appState !== "idle") return;
+    setCoinDrop(true);
+    setTimeout(() => {
+      setCoinSlotFlashing(true);
+      setTimeout(() => setCoinSlotFlashing(false), 600);
+    }, 640);
+    setTimeout(() => {
+      setCoinDrop(false);
+      setShowWarmUp(true);
+      setAppState("categories");
+      setTimeout(() => setShowWarmUp(false), 950);
+    }, 950);
+  }, [appState]);
+
+  const handleCategorySelect = useCallback((id: string) => {
+    if (appState !== "categories") return;
+    const cat = id as WisdomCategory;
+    const entry = pickFromDeck(cat);
+    setAppState("responding");
+    setTimeout(() => runTypewriter(entry), 400);
+  }, [appState, runTypewriter]);
+
+  const handleReset = useCallback(() => {
+    if (typeTimer.current) clearTimeout(typeTimer.current);
+    setDisplayedBody("");
+    setDisplayedProphecy("");
+    setBodyDone(false);
+    setProphecyDone(false);
+    setAppState("idle");
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => () => { if (typeTimer.current) clearTimeout(typeTimer.current); }, []);
+
+  return (
+    <div style={{
+      minHeight:"100vh",
+      background:"radial-gradient(ellipse at 50% 40%, #1a0a2e 0%, #0a0015 60%, #050008 100%)",
+      display:"flex",
+      alignItems:"center",
+      justifyContent:"center",
+      padding:20,
+      position:"relative",
+      overflow:"hidden",
+    }}>
+      {/* Background stars */}
+      {BG_STARS.map(s => (
+        <div key={s.id} style={{
+          position:"fixed",
+          left:`${s.x}%`,
+          top:`${s.y}%`,
+          width:2, height:2,
+          borderRadius:"50%",
+          background:"#fff",
+          opacity: 0.06 + 0.05 * (s.id % 4),
+          animation:`twinkle ${2.5 + s.delay}s ease-in-out infinite`,
+          animationDelay:`${s.delay}s`,
+          pointerEvents:"none",
+        }}/>
+      ))}
+
+      {/* Cabinet wrapper with coin drop overlay */}
+      <div style={{ position:"relative" }}>
+        {/* Coin drop animation */}
+        {coinDrop && (
+          <div style={{
+            position:"absolute",
+            left:"50%", top:-30,
+            transform:"translateX(-50%)",
+            zIndex:50, pointerEvents:"none",
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="11" fill="#ffd700"
+                stroke="#cc9900" strokeWidth="1.5"/>
+              <circle cx="12" cy="12" r="7" fill="none"
+                stroke="#cc9900" strokeWidth="1"/>
+              <text x="12" y="16" textAnchor="middle"
+                fontFamily="'Press Start 2P',monospace"
+                fontSize="8" fill="#cc9900">$</text>
+              <animateTransform attributeName="transform" type="translate"
+                values="0,0; 0,520" dur="0.82s"
+                calcMode="spline" keySplines="0.55 0 0.8 0.8"
+                fill="freeze"/>
+            </svg>
+          </div>
+        )}
+
+        <Cabinet isActive={appState !== "idle"} coinSlotFlashing={coinSlotFlashing}>
+          <Screen
+            appState={appState}
+            displayedBody={displayedBody}
+            displayedProphecy={displayedProphecy}
+            bodyDone={bodyDone}
+            prophecyDone={prophecyDone}
+            showWarmUp={showWarmUp}
+            onSelectCategory={handleCategorySelect}
+            onSkip={handleReset}
+          />
+          <ControlsBar appState={appState} onInsertCoin={handleInsertCoin}/>
+        </Cabinet>
+      </div>
+    </div>
+  );
 }
