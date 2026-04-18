@@ -3,6 +3,7 @@ import Cabinet from "./components/Cabinet";
 import { SpriteArea, SpriteState } from "./components/SpriteArea";
 import CategorySelect from "./components/CategorySelect";
 import { wisdom, WisdomCategory, WisdomEntry, shuffle } from "./components/oracle-wisdom-adapter";
+import { useSound } from "./hooks/useSound";
 
 type AppState = "idle" | "coinDrop" | "categories" | "responding" | "done";
 
@@ -268,6 +269,8 @@ export default function App() {
   const [coinDrop,          setCoinDrop]          = useState(false);
   const [coinSlotFlashing,  setCoinSlotFlashing]  = useState(false);
 
+  const { muted, toggleMute, playCoin, playWarmUp, playSelect, playType, playChime, playReset } = useSound();
+
   // Per-category shuffled decks
   const decks = useRef<Record<WisdomCategory, WisdomEntry[]>>({
     love: [], quests: [], boss: [], destiny: [],
@@ -294,9 +297,11 @@ export default function App() {
       if (bi < entry.r.length) {
         bi++;
         setDisplayedBody(entry.r.slice(0, bi));
+        if (bi % 2 === 0) playType();
         typeTimer.current = setTimeout(typeBody, 22);
       } else {
         setBodyDone(true);
+        playChime();
         typeTimer.current = setTimeout(typeProphecy, 800);
       }
     };
@@ -305,6 +310,7 @@ export default function App() {
       if (pi < entry.p.length) {
         pi++;
         setDisplayedProphecy(entry.p.slice(0, pi));
+        if (pi % 2 === 0) playType();
         typeTimer.current = setTimeout(typeProphecy, 40);
       } else {
         setProphecyDone(true);
@@ -313,10 +319,11 @@ export default function App() {
     };
 
     typeTimer.current = setTimeout(typeBody, 22);
-  }, []);
+  }, [playType, playChime]);
 
   const handleInsertCoin = useCallback(() => {
     if (appState !== "idle") return;
+    playCoin();
     setCoinDrop(true);
     setTimeout(() => {
       setCoinSlotFlashing(true);
@@ -325,27 +332,30 @@ export default function App() {
     setTimeout(() => {
       setCoinDrop(false);
       setShowWarmUp(true);
+      playWarmUp();
       setAppState("categories");
       setTimeout(() => setShowWarmUp(false), 950);
     }, 950);
-  }, [appState]);
+  }, [appState, playCoin, playWarmUp]);
 
   const handleCategorySelect = useCallback((id: string) => {
     if (appState !== "categories") return;
     const cat = id as WisdomCategory;
     const entry = pickFromDeck(cat);
+    playSelect();
     setAppState("responding");
     setTimeout(() => runTypewriter(entry), 400);
-  }, [appState, runTypewriter]);
+  }, [appState, runTypewriter, playSelect]);
 
   const handleReset = useCallback(() => {
     if (typeTimer.current) clearTimeout(typeTimer.current);
+    playReset();
     setDisplayedBody("");
     setDisplayedProphecy("");
     setBodyDone(false);
     setProphecyDone(false);
     setAppState("idle");
-  }, []);
+  }, [playReset]);
 
   // Cleanup on unmount
   useEffect(() => () => { if (typeTimer.current) clearTimeout(typeTimer.current); }, []);
@@ -361,6 +371,30 @@ export default function App() {
       position:"relative",
       overflow:"hidden",
     }}>
+      {/* Mute toggle */}
+      <button
+        onClick={toggleMute}
+        aria-label={muted ? "Unmute sound" : "Mute sound"}
+        title={muted ? "Unmute" : "Mute"}
+        className="font-title"
+        style={{
+          position:"fixed", top:16, right:16, zIndex:100,
+          width:44, height:44,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:16,
+          color: muted ? "var(--text-primary-dim)" : "var(--coin-color)",
+          background:"rgba(10,0,21,0.6)",
+          border:`2px solid ${muted ? "var(--border)" : "var(--coin-color)"}`,
+          borderRadius:6,
+          cursor:"pointer",
+          letterSpacing:0,
+          boxShadow: muted ? "none" : "0 0 10px rgba(255,215,0,0.25)",
+          transition:"all 0.15s ease",
+        }}
+      >
+        {muted ? "🔇" : "🔊"}
+      </button>
+
       {/* Background stars */}
       {BG_STARS.map(s => (
         <div key={s.id} style={{
@@ -383,7 +417,7 @@ export default function App() {
         {coinDrop && (
           <div style={{
             position:"absolute",
-            left:"50%", top:-30,
+            left:30, top:-30,
             transform:"translateX(-50%)",
             zIndex:50, pointerEvents:"none",
           }}>
@@ -396,7 +430,7 @@ export default function App() {
                 fontFamily="'Press Start 2P',monospace"
                 fontSize="8" fill="#cc9900">$</text>
               <animateTransform attributeName="transform" type="translate"
-                values="0,0; 0,520" dur="0.82s"
+                values="0,0; 0,570" dur="0.82s"
                 calcMode="spline" keySplines="0.55 0 0.8 0.8"
                 fill="freeze"/>
             </svg>
