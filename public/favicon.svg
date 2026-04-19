@@ -1,6 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="4" fill="#0a0015"/>
-  <circle cx="16" cy="16" r="10" fill="none" stroke="#00ff88" stroke-width="1.5"/>
-  <circle cx="16" cy="16" r="5" fill="#00ff88" opacity="0.8"/>
-  <circle cx="16" cy="16" r="2" fill="#000"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-size="56">🔮</text>
 </svg>
