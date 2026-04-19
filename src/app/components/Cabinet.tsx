@@ -79,6 +79,7 @@ export default function Cabinet({ children, isActive, coinSlotFlashing }: Props)
 
       {/* Foot */}
       <div style={{
+        position:"relative",
         display:"flex",
         alignItems:"center",
         justifyContent:"space-between",
@@ -98,8 +99,13 @@ export default function Cabinet({ children, isActive, coinSlotFlashing }: Props)
           <span className="font-title" style={{ fontSize:4, color:"var(--border)", letterSpacing:1 }}>SLOT</span>
         </div>
 
-        {/* Speaker grille */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,6px)", gap:3 }}>
+        {/* Speaker grille — absolutely centered */}
+        <div style={{
+          position:"absolute",
+          left:"50%", top:"50%",
+          transform:"translate(-50%, -50%)",
+          display:"grid", gridTemplateColumns:"repeat(4,6px)", gap:3,
+        }}>
           {Array.from({ length:24 }).map((_, i) => (
             <div key={i} style={{ width:3, height:3, borderRadius:"50%", background:"var(--border)" }}/>
           ))}
